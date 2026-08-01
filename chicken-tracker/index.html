@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#e8871e">
+<title>Мои курочки</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>
+  /* ---------- Base ---------- */
+  :root{
+    --bg:#fff8e7;
+    --card-bg:#ffffff;
+    --border:#3a2b1a;
+    --text:#2b2118;
+    --orange:#e8871e;
+    --green-bg:#d9f2d5; --green-border:#2e7d32; --green-text:#1b5e20;
+    --yellow-bg:#fff3c4; --yellow-border:#c98a00; --yellow-text:#7a5300;
+    --red-bg:#fbd6d3; --red-border:#c62828; --red-text:#8e1c1c;
+    --gray-bg:#eee; --gray-border:#999; --gray-text:#555;
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,Roboto,Segoe UI,Arial,sans-serif;
+    font-size:22px;
+    line-height:1.35;
+    -webkit-tap-highlight-color:transparent;
+  }
+  body{ padding:14px 14px 40px; max-width:560px; margin:0 auto; }
+
+  h1{ font-size:30px; text-align:center; margin:6px 0 14px; }
+
+  /* ---------- Undo bar ---------- */
+  #undoBar{
+    display:flex; align-items:center; justify-content:center;
+    gap:10px;
+    min-height:64px;
+    border:4px solid var(--gray-border);
+    background:var(--gray-bg);
+    color:var(--gray-text);
+    border-radius:16px;
+    margin-bottom:16px;
+    font-size:24px;
+    font-weight:bold;
+  }
+  #undoBar.active{
+    border-color:var(--red-border);
+    background:var(--red-bg);
+    color:var(--red-text);
+  }
+  #undoBar button{
+    all:unset;
+    cursor:pointer;
+    padding:10px 22px;
+    min-height:64px;
+    display:flex; align-items:center;
+  }
+  #undoBar.active button{ cursor:pointer; }
+  #undoBar:not(.active) button{ pointer-events:none; }
+
+  /* ---------- Card ---------- */
+  .card{
+    background:var(--card-bg);
+    border:4px solid var(--border);
+    border-radius:20px;
+    padding:16px;
+    margin-bottom:18px;
+  }
+  .card-title{
+    display:flex; align-items:center; gap:10px;
+    font-size:26px; font-weight:bold;
+    margin-bottom:10px;
+  }
+  .card-title .icon{ font-size:32px; }
+
+  .card.green{ background:var(--green-bg); border-color:var(--green-border); }
+  .card.yellow{ background:var(--yellow-bg); border-color:var(--yellow-border); }
+  .card.red{ background:var(--red-bg); border-color:var(--red-border); }
+
+  /* ---------- Buttons ---------- */
+  button{
+    font-family:inherit;
+    font-size:24px;
+    font-weight:bold;
+    min-height:64px;
+    border-radius:14px;
+    border:4px solid var(--border);
+    background:#fff;
+    color:var(--text);
+    cursor:pointer;
+    padding:8px 16px;
+  }
+  button:active{ filter:brightness(0.92); }
+  button.big{ width:100%; }
+  button.selected{
+    background:var(--orange);
+    color:#fff;
+    border-color:var(--border);
+  }
+  .row{ display:flex; gap:10px; align-items:stretch; }
+  .row > *{ flex:1; }
+
+  input[type=number], input[type=text], textarea{
+    font-family:inherit;
+    font-size:22px;
+    min-height:56px;
+    border:3px solid var(--border);
+    border-radius:12px;
+    padding:8px 12px;
+    width:100%;
+  }
+  textarea{ min-height:90px; resize:vertical; }
+  label{ font-size:20px; display:block; margin:6px 0 4px; }
+
+  /* ---------- Eggs card ---------- */
+  .egg-number{
+    font-size:64px;
+    font-weight:bold;
+    text-align:center;
+    margin:6px 0;
+  }
+  .sub-line{ text-align:center; font-size:20px; color:#555; margin-bottom:10px; }
+  .egg-controls{ display:flex; align-items:center; gap:14px; }
+  .egg-controls button{ font-size:36px; min-width:80px; }
+  .egg-controls .egg-number{ flex:1; margin:0; }
+
+  /* ---------- Week chart ---------- */
+  .chart{
+    display:flex; align-items:flex-end; gap:6px;
+    height:150px; margin-top:10px;
+  }
+  .bar-col{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+  .bar{
+    width:100%;
+    background:var(--orange);
+    border:3px solid var(--border);
+    border-radius:8px 8px 0 0;
+    min-height:4px;
+  }
+  .bar-num{ font-size:16px; font-weight:bold; }
+  .bar-label{ font-size:16px; margin-top:4px; }
+  .week-total{ text-align:center; font-size:22px; font-weight:bold; margin-top:10px; }
+
+  /* ---------- Health meter ---------- */
+  .meter{
+    height:44px; border-radius:12px; border:3px solid var(--border);
+    overflow:hidden; margin-bottom:8px;
+  }
+  .meter-fill{ height:100%; transition:background 0.2s; }
+  .meter-fill.good{ background:var(--green-border); }
+  .meter-fill.normal{ background:var(--yellow-border); }
+  .meter-fill.bad{ background:var(--red-border); }
+  .meter-fill.none{ background:var(--gray-border); }
+  .chicken-row{ font-size:30px; text-align:center; letter-spacing:2px; margin-bottom:10px; word-break:break-all; }
+
+  .count-row{ display:flex; align-items:center; justify-content:center; gap:16px; margin-top:12px; }
+  .count-row .count-num{ font-size:30px; font-weight:bold; min-width:100px; text-align:center; }
+  .count-row button{ min-width:64px; }
+
+  /* ---------- Checklist ---------- */
+  .check-row{
+    display:flex; align-items:center; gap:14px;
+    min-height:64px;
+    border:3px solid var(--border);
+    border-radius:14px;
+    padding:8px 14px;
+    margin-bottom:10px;
+    font-size:22px;
+    cursor:pointer;
+    background:#fff;
+  }
+  .check-row.done{ background:var(--green-bg); border-color:var(--green-border); }
+  .check-row .box{
+    width:36px; height:36px; border:3px solid var(--border); border-radius:8px;
+    display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0;
+    background:#fff;
+  }
+  .check-row.done .box{ background:var(--green-border); color:#fff; border-color:var(--green-border); }
+  .warn-text{
+    margin-top:8px; font-weight:bold; color:var(--red-text);
+  }
+
+  /* ---------- Notes ---------- */
+  .note-item{
+    border-top:2px solid #ddd; padding:10px 0; font-size:20px;
+  }
+  .note-date{ font-weight:bold; color:#777; font-size:16px; }
+  .note-delete{ min-height:44px; font-size:18px; margin-top:6px; }
+
+  /* ---------- Backup ---------- */
+  #backupOutput{ display:none; margin-top:10px; }
+  #restoreArea{ display:none; margin-top:10px; }
+
+  .dot{ display:inline-block; width:20px; height:20px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+  .dot.green{ background:var(--green-border); }
+  .dot.yellow{ background:var(--yellow-border); }
+  .dot.red{ background:var(--red-border); }
+  .dot.none{ background:var(--gray-border); }
+
+  .saved-flash{
+    text-align:center; font-size:16px; color:#888; height:20px; margin-top:-8px; margin-bottom:10px;
+  }
+</style>
+</head>
+<body>
+
+<h1>🐔 Мои курочки</h1>
+
+<div id="undoBar">
+  <button id="undoBtn">↩️ Отменить</button>
+</div>
+<div class="saved-flash" id="savedFlash"></div>
+
+<!-- 1. Eggs today -->
+<div class="card">
+  <div class="card-title"><span class="icon">🥚</span> Яйца сегодня</div>
+  <div class="egg-controls">
+    <button id="eggMinus">−1</button>
+    <div class="egg-number" id="eggToday">0</div>
+    <button id="eggPlus">+1</button>
+  </div>
+  <div class="sub-line" id="eggYesterday">Вчера: 0</div>
+</div>
+
+<!-- 2. Week overview -->
+<div class="card">
+  <div class="card-title"><span class="icon">📊</span> За неделю</div>
+  <div class="chart" id="weekChart"></div>
+  <div class="week-total" id="weekTotal">Всего за неделю: 0</div>
+</div>
+
+<!-- 3. Sales -->
+<div class="card">
+  <div class="card-title"><span class="icon">💰</span> Продано</div>
+  <div class="egg-controls">
+    <button id="soldMinus">−1</button>
+    <div class="egg-number" id="soldToday">0</div>
+    <button id="soldPlus">+1</button>
+  </div>
+  <div class="sub-line">Продано сегодня, шт.</div>
+  <label for="priceInput">Цена, руб.</label>
+  <div class="row">
+    <input type="number" id="priceInput" min="0" step="0.01" inputmode="decimal">
+    <button id="priceUnitBtn">за яйцо</button>
+  </div>
+  <div class="sub-line" id="soldWeek" style="margin-top:14px;">Продано за неделю: 0 шт.</div>
+  <div class="sub-line" id="moneyWeek">Деньги за неделю: 0 руб.</div>
+  <div class="sub-line" id="totalEggs">Всего яиц: 0</div>
+  <div class="sub-line" id="totalMoney">Всего денег: 0 руб.</div>
+</div>
+
+<!-- 4. Chicken health -->
+<div class="card" id="healthCard">
+  <div class="card-title"><span class="icon">🐔</span> Здоровье кур</div>
+  <div class="meter"><div class="meter-fill none" id="healthMeter"></div></div>
+  <div class="chicken-row" id="chickenRow"></div>
+  <div class="row">
+    <button id="healthGood">👍 Хорошо</button>
+    <button id="healthNormal">😐 Нормально</button>
+    <button id="healthBad">😟 Плохо</button>
+  </div>
+  <div id="healthNoteWrap" style="display:none; margin-top:12px;">
+    <label for="healthNote">Что случилось?</label>
+    <textarea id="healthNote" placeholder="Коротко опишите..."></textarea>
+  </div>
+  <div class="count-row">
+    <button id="chickenMinus">−</button>
+    <div class="count-num" id="chickenCount">Кур: 10</div>
+    <button id="chickenPlus">+</button>
+  </div>
+</div>
+
+<!-- 5. Feed -->
+<div class="card" id="feedCard">
+  <div class="card-title"><span class="icon">🌾</span> Корм</div>
+  <div class="egg-number" id="feedKg">0 кг</div>
+  <div class="sub-line" id="feedDays">Хватит на — дней</div>
+  <div class="row">
+    <button id="feedMinus">− 1 кг</button>
+    <button id="feedPlus">+ Купила корм</button>
+  </div>
+  <div id="feedAddWrap" style="display:none; margin-top:12px;">
+    <label for="feedAddInput">Сколько килограмм купили?</label>
+    <div class="row">
+      <input type="number" id="feedAddInput" min="0" step="0.5" inputmode="decimal">
+      <button id="feedAddConfirm">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<!-- 6. Daily checklist -->
+<div class="card">
+  <div class="card-title"><span class="icon">✅</span> Сегодня сделала</div>
+  <div class="check-row" data-chore="water"><div class="box"></div>💧 Налила воду</div>
+  <div class="check-row" data-chore="feed"><div class="box"></div>🌾 Насыпала корм</div>
+  <div class="check-row" data-chore="clean"><div class="box"></div>🧹 Убрала в курятнике</div>
+  <div class="check-row" data-chore="collect"><div class="box"></div>🥚 Собрала яйца</div>
+  <div class="warn-text" id="cleanWarn" style="display:none;">Пора убрать в курятнике</div>
+</div>
+
+<!-- 7. Laying rate -->
+<div class="card">
+  <div class="card-title"><span class="icon">📈</span> Несут хорошо?</div>
+  <div class="sub-line" id="layingRate" style="font-size:24px;">
+    <span class="dot none"></span>Каждая курица: — яиц в неделю
+  </div>
+</div>
+
+<!-- 8. Notes -->
+<div class="card">
+  <div class="card-title"><span class="icon">📝</span> Заметки</div>
+  <textarea id="noteInput" placeholder="Написать заметку..."></textarea>
+  <button class="big" id="noteAdd" style="margin-top:10px;">Добавить</button>
+  <div id="noteList"></div>
+</div>
+
+<!-- 9. Backup -->
+<div class="card">
+  <div class="card-title"><span class="icon">💾</span> Сохранить данные</div>
+  <div class="row">
+    <button id="backupShow">Копия данных</button>
+    <button id="restoreShow">Восстановить</button>
+  </div>
+  <div id="backupOutput">
+    <label>Скопируйте этот текст и сохраните его:</label>
+    <textarea id="backupText" readonly rows="5"></textarea>
+  </div>
+  <div id="restoreArea">
+    <label>Вставьте сюда скопированный текст:</label>
+    <textarea id="restoreText" rows="5"></textarea>
+    <button class="big" id="restoreConfirm" style="margin-top:10px;">Восстановить</button>
+  </div>
+</div>
+
+<script>
+/* ======================================================================
+   Мои курочки — offline egg/chicken tracker for one caretaker.
+   Single self-contained file: HTML + CSS + JS, no build step, no
+   dependencies. All data lives in localStorage under STORAGE_KEY.
+   ====================================================================== */
+
+const STORAGE_KEY = 'kurochkiData_v1';
+const WEEKDAY_LABELS = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+const LAYING_GOOD = 5;   // eggs/chicken/week >= this => green
+const LAYING_OK = 3;     // eggs/chicken/week >= this => yellow, below => red
+const FEED_LOW_DAYS = 5; // days remaining below this => red "low feed" warning
+const COOP_WARN_DAYS = 7;// days since last coop clean before reminder
+
+/* ---------- Date helpers (local time, not UTC) ---------- */
+function fmtDate(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function todayStr(){ return fmtDate(new Date()); }
+function addDays(dateStr, n){
+  const [y,m,d] = dateStr.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  dt.setDate(dt.getDate()+n);
+  return fmtDate(dt);
+}
+function mondayOf(dateStr){
+  const [y,m,d] = dateStr.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  const day = dt.getDay(); // 0=Sun..6=Sat
+  const diff = day === 0 ? -6 : 1-day;
+  dt.setDate(dt.getDate()+diff);
+  return fmtDate(dt);
+}
+function weekDates(dateStr){
+  const monday = mondayOf(dateStr);
+  const out = [];
+  for(let i=0;i<7;i++) out.push(addDays(monday, i));
+  return out;
+}
+function daysBetween(a,b){
+  const [ay,am,ad]=a.split('-').map(Number), [by,bm,bd]=b.split('-').map(Number);
+  const da=new Date(ay,am-1,ad), db=new Date(by,bm-1,bd);
+  return Math.round((db-da)/86400000);
+}
+
+/* ---------- Default state / day record ---------- */
+function defaultDay(){
+  return {
+    eggs: 0,
+    sold: 0,
+    priceType: 'egg', // 'egg' or 'dozen'
+    price: 0,
+    health: null,     // 'good' | 'normal' | 'bad' | null
+    healthNote: '',
+    chores: { water:false, feed:false, clean:false, collect:false },
+    feedUsed: 0,       // kg used today (from -1kg taps)
+    feedPurchased: 0   // kg purchased today
+  };
+}
+function defaultState(){
+  return {
+    chickenCount: 10,
+    feedKg: 25,
+    days: {},
+    notes: [],
+    lastCoopCleanDate: null,
+    createdDate: todayStr()
+  };
+}
+
+/* ---------- Load / save ---------- */
+let state = loadState();
+let undoSnapshot = null;
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+    // Merge with defaults so older backups without newer fields still work.
+    return Object.assign(defaultState(), parsed);
+  }catch(e){
+    return defaultState();
+  }
+}
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  flashSaved();
+}
+let flashTimer = null;
+function flashSaved(){
+  const el = document.getElementById('savedFlash');
+  el.textContent = 'Сохранено';
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(()=>{ el.textContent = ''; }, 1200);
+}
+
+function getDay(dateStr){
+  if(!state.days[dateStr]) state.days[dateStr] = defaultDay();
+  return state.days[dateStr];
+}
+
+/* ---------- Undo ---------- */
+function snapshotForUndo(){
+  undoSnapshot = JSON.parse(JSON.stringify(state));
+  document.getElementById('undoBar').classList.add('active');
+}
+function doUndo(){
+  if(!undoSnapshot) return;
+  state = undoSnapshot;
+  undoSnapshot = null;
+  document.getElementById('undoBar').classList.remove('active');
+  saveState();
+  renderAll();
+}
+document.getElementById('undoBtn').addEventListener('click', doUndo);
+
+/* Wrap a mutation: snapshot, run it, save, re-render. */
+function mutate(fn){
+  snapshotForUndo();
+  fn();
+  saveState();
+  renderAll();
+}
+
+/* ======================================================================
+   Render
+   ====================================================================== */
+function renderAll(){
+  const today = todayStr();
+  const yesterday = addDays(today, -1);
+  const week = weekDates(today);
+  const todayRec = getDay(today);
+
+  renderEggs(today, yesterday, todayRec);
+  renderWeek(week);
+  renderSales(today, week, todayRec);
+  renderHealth(todayRec);
+  renderFeed();
+  renderChecklist(today, todayRec);
+  renderLayingRate(week);
+  renderNotes();
+}
+
+/* ---- 1. Eggs ---- */
+function renderEggs(today, yesterday, todayRec){
+  document.getElementById('eggToday').textContent = todayRec.eggs;
+  const yEggs = state.days[yesterday] ? state.days[yesterday].eggs : 0;
+  document.getElementById('eggYesterday').textContent = `Вчера: ${yEggs}`;
+}
+document.getElementById('eggPlus').addEventListener('click', ()=>{
+  mutate(()=>{ getDay(todayStr()).eggs++; });
+});
+document.getElementById('eggMinus').addEventListener('click', ()=>{
+  mutate(()=>{ const d = getDay(todayStr()); if(d.eggs>0) d.eggs--; });
+});
+
+/* ---- 2. Week chart ---- */
+function renderWeek(week){
+  const chart = document.getElementById('weekChart');
+  chart.innerHTML = '';
+  const counts = week.map(d => state.days[d] ? state.days[d].eggs : 0);
+  const max = Math.max(1, ...counts);
+  let total = 0;
+  week.forEach((dateStr, i)=>{
+    const n = counts[i];
+    total += n;
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    const heightPct = Math.max(4, Math.round((n/max)*100));
+    col.innerHTML = `
+      <div class="bar-num">${n}</div>
+      <div class="bar" style="height:${heightPct}%"></div>
+      <div class="bar-label">${WEEKDAY_LABELS[i]}</div>
+    `;
+    chart.appendChild(col);
+  });
+  document.getElementById('weekTotal').textContent = `Всего за неделю: ${total}`;
+}
+
+/* ---- 3. Sales ---- */
+function weekSums(week){
+  let sold = 0, money = 0;
+  week.forEach(dateStr=>{
+    const rec = state.days[dateStr];
+    if(!rec) return;
+    sold += rec.sold;
+    money += dayMoney(rec);
+  });
+  return { sold, money };
+}
+function dayMoney(rec){
+  if(rec.priceType === 'dozen') return (rec.sold/12) * rec.price;
+  return rec.sold * rec.price;
+}
+function totalSums(){
+  let eggs = 0, sold = 0, money = 0;
+  Object.values(state.days).forEach(rec=>{
+    eggs += rec.eggs;
+    sold += rec.sold;
+    money += dayMoney(rec);
+  });
+  return { eggs, sold, money };
+}
+function renderSales(today, week, todayRec){
+  document.getElementById('soldToday').textContent = todayRec.sold;
+  document.getElementById('priceInput').value = todayRec.price || '';
+  document.getElementById('priceUnitBtn').textContent = todayRec.priceType === 'dozen' ? 'за десяток' : 'за яйцо';
+
+  const { sold, money } = weekSums(week);
+  document.getElementById('soldWeek').textContent = `Продано за неделю: ${sold} шт.`;
+  document.getElementById('moneyWeek').textContent = `Деньги за неделю: ${round2(money)} руб.`;
+
+  const t = totalSums();
+  document.getElementById('totalEggs').textContent = `Всего яиц: ${t.eggs}`;
+  document.getElementById('totalMoney').textContent = `Всего денег: ${round2(t.money)} руб.`;
+}
+function round2(n){ return Math.round(n*100)/100; }
+
+document.getElementById('soldPlus').addEventListener('click', ()=>{
+  mutate(()=>{ getDay(todayStr()).sold++; });
+});
+document.getElementById('soldMinus').addEventListener('click', ()=>{
+  mutate(()=>{ const d = getDay(todayStr()); if(d.sold>0) d.sold--; });
+});
+document.getElementById('priceInput').addEventListener('change', (e)=>{
+  mutate(()=>{ getDay(todayStr()).price = parseFloat(e.target.value) || 0; });
+});
+document.getElementById('priceUnitBtn').addEventListener('click', ()=>{
+  mutate(()=>{
+    const d = getDay(todayStr());
+    d.priceType = d.priceType === 'dozen' ? 'egg' : 'dozen';
+  });
+});
+
+/* ---- 4. Health ---- */
+function renderHealth(todayRec){
+  const meter = document.getElementById('healthMeter');
+  meter.className = 'meter-fill ' + (todayRec.health || 'none');
+  meter.style.width = todayRec.health ? '100%' : '15%';
+
+  const card = document.getElementById('healthCard');
+  card.classList.remove('green','yellow','red');
+  if(todayRec.health === 'good') card.classList.add('green');
+  else if(todayRec.health === 'normal') card.classList.add('yellow');
+  else if(todayRec.health === 'bad') card.classList.add('red');
+
+  const n = Math.max(0, Math.min(30, state.chickenCount));
+  document.getElementById('chickenRow').textContent = '🐔'.repeat(n || 0);
+
+  ['healthGood','healthNormal','healthBad'].forEach(id=>document.getElementById(id).classList.remove('selected'));
+  if(todayRec.health === 'good') document.getElementById('healthGood').classList.add('selected');
+  if(todayRec.health === 'normal') document.getElementById('healthNormal').classList.add('selected');
+  if(todayRec.health === 'bad') document.getElementById('healthBad').classList.add('selected');
+
+  const noteWrap = document.getElementById('healthNoteWrap');
+  noteWrap.style.display = todayRec.health === 'bad' ? 'block' : 'none';
+  document.getElementById('healthNote').value = todayRec.healthNote || '';
+
+  document.getElementById('chickenCount').textContent = `Кур: ${state.chickenCount}`;
+}
+function setHealth(value){
+  mutate(()=>{ getDay(todayStr()).health = value; });
+}
+document.getElementById('healthGood').addEventListener('click', ()=>setHealth('good'));
+document.getElementById('healthNormal').addEventListener('click', ()=>setHealth('normal'));
+document.getElementById('healthBad').addEventListener('click', ()=>setHealth('bad'));
+document.getElementById('healthNote').addEventListener('change', (e)=>{
+  mutate(()=>{ getDay(todayStr()).healthNote = e.target.value; });
+});
+document.getElementById('chickenPlus').addEventListener('click', ()=>{
+  mutate(()=>{ state.chickenCount++; });
+});
+document.getElementById('chickenMinus').addEventListener('click', ()=>{
+  mutate(()=>{ if(state.chickenCount>1) state.chickenCount--; });
+});
+
+/* ---- 5. Feed ---- */
+function avgDailyFeedUsage(){
+  const entries = Object.values(state.days).filter(d=>d.feedUsed > 0);
+  if(entries.length === 0) return 0;
+  const sum = entries.reduce((a,d)=>a+d.feedUsed, 0);
+  return sum / entries.length;
+}
+function renderFeed(){
+  document.getElementById('feedKg').textContent = `${round2(state.feedKg)} кг`;
+  const avg = avgDailyFeedUsage();
+  const card = document.getElementById('feedCard');
+  card.classList.remove('red');
+  const daysEl = document.getElementById('feedDays');
+  if(avg > 0){
+    const daysLeft = Math.floor(state.feedKg / avg);
+    daysEl.textContent = `Хватит на ${daysLeft} дней`;
+    if(daysLeft < FEED_LOW_DAYS){
+      card.classList.add('red');
+      daysEl.textContent = `Мало корма! Хватит на ${daysLeft} дней`;
+    }
+  } else {
+    daysEl.textContent = 'Хватит на — дней';
+  }
+}
+document.getElementById('feedMinus').addEventListener('click', ()=>{
+  mutate(()=>{
+    const d = getDay(todayStr());
+    state.feedKg = Math.max(0, round2(state.feedKg - 1));
+    d.feedUsed += 1;
+  });
+});
+document.getElementById('feedPlus').addEventListener('click', ()=>{
+  const wrap = document.getElementById('feedAddWrap');
+  wrap.style.display = wrap.style.display === 'block' ? 'none' : 'block';
+  document.getElementById('feedAddInput').focus();
+});
+document.getElementById('feedAddConfirm').addEventListener('click', ()=>{
+  const val = parseFloat(document.getElementById('feedAddInput').value);
+  if(!val || val<=0) return;
+  mutate(()=>{
+    const d = getDay(todayStr());
+    state.feedKg = round2(state.feedKg + val);
+    d.feedPurchased += val;
+  });
+  document.getElementById('feedAddInput').value = '';
+  document.getElementById('feedAddWrap').style.display = 'none';
+});
+
+/* ---- 6. Checklist ---- */
+function renderChecklist(today, todayRec){
+  document.querySelectorAll('.check-row').forEach(row=>{
+    const key = row.dataset.chore;
+    const done = !!todayRec.chores[key];
+    row.classList.toggle('done', done);
+    row.querySelector('.box').textContent = done ? '✓' : '';
+  });
+  const warn = document.getElementById('cleanWarn');
+  if(state.lastCoopCleanDate){
+    const gap = daysBetween(state.lastCoopCleanDate, today);
+    warn.style.display = gap >= COOP_WARN_DAYS ? 'block' : 'none';
+  } else {
+    const gap = daysBetween(state.createdDate, today);
+    warn.style.display = gap >= COOP_WARN_DAYS ? 'block' : 'none';
+  }
+}
+document.querySelectorAll('.check-row').forEach(row=>{
+  row.addEventListener('click', ()=>{
+    const key = row.dataset.chore;
+    mutate(()=>{
+      const d = getDay(todayStr());
+      d.chores[key] = !d.chores[key];
+      if(key === 'clean' && d.chores.clean){
+        state.lastCoopCleanDate = todayStr();
+      }
+    });
+  });
+});
+
+/* ---- 7. Laying rate ---- */
+function renderLayingRate(week){
+  const weekEggs = week.reduce((sum,d)=> sum + (state.days[d] ? state.days[d].eggs : 0), 0);
+  const el = document.getElementById('layingRate');
+  if(state.chickenCount <= 0){
+    el.innerHTML = `<span class="dot none"></span>Каждая курица: — яиц в неделю`;
+    return;
+  }
+  const rate = weekEggs / state.chickenCount;
+  let cls = 'red';
+  if(rate >= LAYING_GOOD) cls = 'green';
+  else if(rate >= LAYING_OK) cls = 'yellow';
+  el.innerHTML = `<span class="dot ${cls}"></span>Каждая курица: ${round2(rate)} яиц в неделю`;
+}
+
+/* ---- 8. Notes ---- */
+function renderNotes(){
+  const list = document.getElementById('noteList');
+  list.innerHTML = '';
+  const notes = [...state.notes].reverse();
+  notes.forEach((note)=>{
+    const realIndex = state.notes.indexOf(note);
+    const div = document.createElement('div');
+    div.className = 'note-item';
+    div.innerHTML = `
+      <div class="note-date">${note.date}</div>
+      <div>${escapeHtml(note.text)}</div>
+      <button class="note-delete" data-index="${realIndex}">Удалить</button>
+    `;
+    list.appendChild(div);
+  });
+  list.querySelectorAll('.note-delete').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(!confirm('Удалить эту заметку?')) return;
+      const idx = parseInt(btn.dataset.index, 10);
+      mutate(()=>{ state.notes.splice(idx,1); });
+    });
+  });
+}
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+document.getElementById('noteAdd').addEventListener('click', ()=>{
+  const input = document.getElementById('noteInput');
+  const text = input.value.trim();
+  if(!text) return;
+  mutate(()=>{
+    state.notes.push({ date: todayStr(), text });
+  });
+  input.value = '';
+});
+
+/* ---- 9. Backup ---- */
+document.getElementById('backupShow').addEventListener('click', ()=>{
+  const out = document.getElementById('backupOutput');
+  const text = document.getElementById('backupText');
+  text.value = JSON.stringify(state);
+  out.style.display = out.style.display === 'block' ? 'none' : 'block';
+  if(out.style.display === 'block'){
+    text.focus();
+    text.select();
+  }
+});
+document.getElementById('restoreShow').addEventListener('click', ()=>{
+  const area = document.getElementById('restoreArea');
+  area.style.display = area.style.display === 'block' ? 'none' : 'block';
+});
+document.getElementById('restoreConfirm').addEventListener('click', ()=>{
+  const raw = document.getElementById('restoreText').value.trim();
+  if(!raw) return;
+  let parsed;
+  try{ parsed = JSON.parse(raw); }
+  catch(e){ alert('Не получилось прочитать текст. Проверьте, что скопировали всё целиком.'); return; }
+  if(!confirm('Это заменит все текущие данные. Вы уверены?')) return;
+  snapshotForUndo();
+  state = Object.assign(defaultState(), parsed);
+  saveState();
+  renderAll();
+  document.getElementById('restoreText').value = '';
+  document.getElementById('restoreArea').style.display = 'none';
+});
+
+/* ======================================================================
+   Startup
+   ====================================================================== */
+renderAll();
+
+// Register the service worker for offline/installable support.
+// This silently fails under file:// or unsupported browsers, which is fine —
+// the app itself works purely from localStorage without it.
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
