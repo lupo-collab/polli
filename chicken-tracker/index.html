@@ -93,6 +93,8 @@
     background:#fff;
     color:var(--text);
     cursor:pointer;
+    overflow-wrap:break-word;
+    word-break:break-word;
     padding:8px 16px;
   }
   button:active{ filter:brightness(0.92); }
@@ -102,8 +104,8 @@
     color:#fff;
     border-color:var(--border);
   }
-  .row{ display:flex; gap:10px; align-items:stretch; }
-  .row > *{ flex:1; }
+  .stack{ display:flex; flex-direction:column; gap:10px; }
+  .stack > button{ white-space:nowrap; }
 
   input[type=number], input[type=text], textarea{
     font-family:inherit;
@@ -244,9 +246,9 @@
   </div>
   <div class="sub-line">Продано сегодня, шт.</div>
   <label for="priceInput">Цена, руб.</label>
-  <div class="row">
+  <div class="stack">
     <input type="number" id="priceInput" min="0" step="0.01" inputmode="decimal">
-    <button id="priceUnitBtn">за яйцо</button>
+    <button class="big" id="priceUnitBtn">за яйцо</button>
   </div>
   <div class="sub-line" id="soldWeek" style="margin-top:14px;">Продано за неделю: 0 шт.</div>
   <div class="sub-line" id="moneyWeek">Деньги за неделю: 0 руб.</div>
@@ -259,10 +261,10 @@
   <div class="card-title"><span class="icon">🐔</span> Здоровье кур</div>
   <div class="meter"><div class="meter-fill none" id="healthMeter"></div></div>
   <div class="chicken-row" id="chickenRow"></div>
-  <div class="row">
-    <button id="healthGood">👍 Хорошо</button>
-    <button id="healthNormal">😐 Нормально</button>
-    <button id="healthBad">😟 Плохо</button>
+  <div class="stack">
+    <button class="big" id="healthGood">👍 Хорошо</button>
+    <button class="big" id="healthNormal">😐 Нормально</button>
+    <button class="big" id="healthBad">😟 Плохо</button>
   </div>
   <div id="healthNoteWrap" style="display:none; margin-top:12px;">
     <label for="healthNote">Что случилось?</label>
@@ -280,15 +282,15 @@
   <div class="card-title"><span class="icon">🌾</span> Корм</div>
   <div class="egg-number" id="feedKg">0 кг</div>
   <div class="sub-line" id="feedDays">Хватит на — дней</div>
-  <div class="row">
-    <button id="feedMinus">− 1 кг</button>
-    <button id="feedPlus">+ Купила корм</button>
+  <div class="stack">
+    <button class="big" id="feedMinus">− 1 кг</button>
+    <button class="big" id="feedPlus">+ Купила корм</button>
   </div>
   <div id="feedAddWrap" style="display:none; margin-top:12px;">
     <label for="feedAddInput">Сколько килограмм купили?</label>
-    <div class="row">
+    <div class="stack">
       <input type="number" id="feedAddInput" min="0" step="0.5" inputmode="decimal">
-      <button id="feedAddConfirm">Добавить</button>
+      <button class="big" id="feedAddConfirm">Добавить</button>
     </div>
   </div>
 </div>
@@ -322,9 +324,9 @@
 <!-- 9. Backup -->
 <div class="card">
   <div class="card-title"><span class="icon">💾</span> Сохранить данные</div>
-  <div class="row">
-    <button id="backupShow">Копия данных</button>
-    <button id="restoreShow">Восстановить</button>
+  <div class="stack">
+    <button class="big" id="backupShow">Копия данных</button>
+    <button class="big" id="restoreShow">Восстановить</button>
   </div>
   <div id="backupOutput">
     <label>Скопируйте этот текст и сохраните его:</label>
