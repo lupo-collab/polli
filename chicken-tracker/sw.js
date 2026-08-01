@@ -1,5 +1,5 @@
 // Minimal offline cache so the app still opens with no internet connection.
-const CACHE_NAME = 'kurochki-cache-v1';
+const CACHE_NAME = 'kurochki-cache-v2';
 const FILES_TO_CACHE = ['./index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', (event) => {
@@ -18,19 +18,18 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Cache-first: serve from cache, fall back to network, and cache new GETs as they succeed.
+// Network-first: always try to fetch the latest version when online, so
+// updates show up immediately. Only fall back to the cached copy when the
+// network is unavailable (offline use).
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          return response;
-        })
-        .catch(() => cached);
-    })
+    fetch(event.request)
+      .then((response) => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
