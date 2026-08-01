@@ -245,11 +245,8 @@
     <button id="soldPlus">+1</button>
   </div>
   <div class="sub-line">Продано сегодня, шт.</div>
-  <label for="priceInput">Цена, руб.</label>
-  <div class="stack">
-    <input type="number" id="priceInput" min="0" step="0.01" inputmode="decimal">
-    <button class="big" id="priceUnitBtn">за яйцо</button>
-  </div>
+  <label for="priceInput">Цена за 10 яиц, руб.</label>
+  <input type="number" id="priceInput" min="0" step="0.01" inputmode="decimal">
   <div class="sub-line" id="soldWeek" style="margin-top:14px;">Продано за неделю: 0 шт.</div>
   <div class="sub-line" id="moneyWeek">Деньги за неделю: 0 руб.</div>
   <div class="sub-line" id="totalEggs">Всего яиц: 0</div>
@@ -392,8 +389,8 @@ function defaultDay(){
   return {
     eggs: 0,
     sold: 0,
-    priceType: 'egg', // 'egg' or 'dozen'
-    price: 0,
+    price: 0, // price per 10 eggs, in rubles
+
     health: null,     // 'good' | 'normal' | 'bad' | null
     healthNote: '',
     chores: { water:false, feed:false, clean:false, collect:false },
@@ -534,8 +531,7 @@ function weekSums(week){
   return { sold, money };
 }
 function dayMoney(rec){
-  if(rec.priceType === 'dozen') return (rec.sold/12) * rec.price;
-  return rec.sold * rec.price;
+  return (rec.sold/10) * rec.price;
 }
 function totalSums(){
   let eggs = 0, sold = 0, money = 0;
@@ -549,7 +545,6 @@ function totalSums(){
 function renderSales(today, week, todayRec){
   document.getElementById('soldToday').textContent = todayRec.sold;
   document.getElementById('priceInput').value = todayRec.price || '';
-  document.getElementById('priceUnitBtn').textContent = todayRec.priceType === 'dozen' ? 'за десяток' : 'за яйцо';
 
   const { sold, money } = weekSums(week);
   document.getElementById('soldWeek').textContent = `Продано за неделю: ${sold} шт.`;
@@ -569,12 +564,6 @@ document.getElementById('soldMinus').addEventListener('click', ()=>{
 });
 document.getElementById('priceInput').addEventListener('change', (e)=>{
   mutate(()=>{ getDay(todayStr()).price = parseFloat(e.target.value) || 0; });
-});
-document.getElementById('priceUnitBtn').addEventListener('click', ()=>{
-  mutate(()=>{
-    const d = getDay(todayStr());
-    d.priceType = d.priceType === 'dozen' ? 'egg' : 'dozen';
-  });
 });
 
 /* ---- 4. Health ---- */
